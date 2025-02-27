@@ -1,0 +1,63 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kopi Shinta - Login</title>
+    <script>
+        function showError(message) {
+            alert(message); // Menampilkan popup browser
+        }
+    </script>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+</head>
+<body>
+    <div class="container">
+        <!-- Bagian Kiri -->
+        <div class="left-section">
+            {% load static %}
+            <img src="{% static 'images/logo.png' %}" alt="Logo">
+        </div>
+
+        <!-- Bagian Kanan -->
+        <div class="right-section">
+            <h1>KOPI SHINTA</h1>
+            <p>Web App Login</p>
+            <form method="POST" action="{% url 'login' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="username">Nama Pengguna :</label>
+                    <input type="text" id="username" name="username" placeholder="Nama / Email / ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Kata Sandi :</label>
+                    <input type="password" id="password" name="password" placeholder="Kata Sandi" required>
+                </div>
+                <div class="remember-me">
+                    <input type="checkbox" id="remember" name="remember_me">
+                    <label for="remember">Ingat Saya</label>
+                </div>
+                <button type="submit" class="login-btn">Masuk</button>
+            </form>
+            {% if messages %}
+            <script>
+                {% for message in messages %}
+                    showError("{{ message }}");
+                {% endfor %}
+            </script>
+            {% endif %}
+            <div class="forgot-password">
+                <a href="#">Lupa kata sandi?</a>
+            </div>
+            {% if messages %}
+                {% for message in messages %}
+                <p class="alert alert-success">{{ message }}</p>
+                {% endfor %}
+                {% endif %}
+        </div>
+    </div>
+</body>
+</html>

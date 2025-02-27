@@ -1,0 +1,82 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Inventory</title>
+    <link rel="stylesheet" href="{% static 'css/laporan_inventory.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    {% include 'sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="content">
+        <header class="order-header">
+            <h1>KOPI SHINTA</h1>
+            <a href="{% url 'logout' %}" class="logout-button">Keluar</a>
+        </header>
+
+        <div class="main-content">
+            <h1>Laporan Inventory</h1>
+
+            <!-- Filter Tanggal -->
+            <div class="filter-section">
+                <!-- Total Inventory -->
+                <div class="total-inventory">
+                    <strong>Total Terjual Semua: </strong>
+                    <span id="total-inventory">0</span>
+                </div>
+
+            <!-- Tabel Penjualan (Sold) -->
+                <table class="sold-table">
+                    <thead>
+                        <tr>
+                            <th>Periode</th>
+                            <th>Hari Ini</th>
+                            <th>Kemarin</th>
+                            <th>Minggu Ini</th>
+                            <th>Bulan Ini</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Total</td>
+                            <td id="today-total">0</td>
+                            <td id="yesterday-total">0</td>
+                            <td id="week-total">0</td>
+                            <td id="month-total">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <!-- Tombol Download -->
+                <button id="download-btn" class="export-button">Download Data</button>
+            </div>
+
+            <!-- Tabel Inventory -->
+            <div class="scrollable-container">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Nomor Order</th>
+                            <th>SKU</th>
+                            <th>Nama Item</th>
+                            <th>Terjual</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-body">
+                        <!-- Data akan dimuat secara dinamis -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="{% static 'js/laporan_inventory.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambah Menu</title>
+    <link rel="stylesheet" href="{% static 'css/tambah_menu.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    {% include 'sidebar.html' %}
+    
+    <!-- Main Content -->
+    <div class="form-container">
+        <header class="menu-header">
+            <h1>KOPI SHINTA</h1>
+        </header>
+            <button type="button" class="back-button" onclick="confirmBatal()">← Batal</button>
+       
+        <form method="post" enctype="multipart/form-data" class="form-container {% if is_edit %}edit-mode{% endif %}">
+            {% csrf_token %}
+            <h1>{{ is_edit|yesno:"Edit Menu,Tambah Menu Baru" }}</h1>
+        
+            <div class="form-row">
+                <label for="gambar">Gambar</label>
+                <input type="file" name="gambar" id="gambar" accept="image/*">
+            </div>
+            
+            <!-- Preview gambar jika dalam mode edit -->
+            {% if is_edit and menu_item.gambar %}
+            <div class="preview-container">
+                <img src="{{ menu_item.gambar }}" alt="Preview">
+                <p><i>Gambar saat ini. Jika tidak memilih file baru, gambar lama akan tetap digunakan.</i></p>
+            </div>
+            {% endif %}
+        
+            <div class="form-row">
+                <label for="sku">SKU</label>
+                <input type="text" name="sku" id="sku" value="{{ menu_item.sku|default:'' }}">
+            </div>
+        
+            <div class="form-row">
+                <label for="nama_item">Nama Item</label>
+                <input type="text" name="nama_item" id="nama_item" value="{{ menu_item.nama_item|default:'' }}">
+            </div>
+        
+            <div class="form-row">
+                <label for="harga">Harga</label>
+                <input type="number" name="harga" id="harga" value="{{ menu_item.harga|default:'' }}">
+            </div>
+        
+            <div class="form-row">
+                <label for="kategori">Kategori</label>
+                <div class="kategori-options">
+                    <label>
+                        <input type="radio" name="kategori" value="Makanan" {% if menu_item.kategori == "Makanan" %}checked{% endif %}>
+                        Makanan
+                    </label>
+                    <label>
+                        <input type="radio" name="kategori" value="Minuman" {% if menu_item.kategori == "Minuman" %}checked{% endif %}>
+                        Minuman
+                    </label>
+                    <label>
+                        <input type="radio" name="kategori" value="Camilan" {% if menu_item.kategori == "Camilan" %}checked{% endif %}>
+                        Camilan
+                    </label>
+                </div>
+            </div>
+        
+            <div class="form-row">
+                <label for="stok_saat_ini">Stok</label>
+                <input type="number" name="stok_saat_ini" id="stok_saat_ini" value="{{ menu_item.stok_saat_ini|default:'' }}">
+            </div>
+            <div class="form-actions">
+                <button type="button" class="reset-button" onclick="confirmHapus()">Hapus</button>
+                <button type="submit" class="save-button" onclick="setSaveAction('new')">Simpan dan Tambah Baru</button>
+                <button type="submit" class="save-button" onclick="setSaveAction('menu')">Simpan dan Selesai</button>
+            </div>
+        </form>    
+    </div> 
+    <script>
+        // Fungsi untuk konfirmasi tombol Batal
+        function confirmBatal() {
+            const konfirmasi = confirm("Apakah yakin ingin membatalkan input data?");
+            if (konfirmasi) {
+                // Jika "Ya", arahkan ke halaman menu
+                window.location.href = "{% url 'menu' %}";
+            }
+            // Jika "Tidak", tetap di halaman ini (tidak perlu tindakan tambahan)
+        }
+    
+        // Fungsi untuk konfirmasi tombol Hapus
+        function confirmHapus() {
+            const konfirmasi = confirm("Apakah yakin ingin menghapus data?");
+            if (konfirmasi) {
+                // Jika "Ya", reset semua form input
+                document.querySelector("form").reset();
+            }
+            // Jika "Tidak", tetap di halaman ini (tidak perlu tindakan tambahan)
+        }
+    </script>
+    <script>
+        function setSaveAction(action) {
+            // Tambahkan nilai save_action ke dalam form sebelum submit
+            const form = document.querySelector('form');
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'save_action';
+            input.value = action;
+            form.appendChild(input);
+            form.submit(); // Kirim form
+        }
+    </script>        
+</body>
+</html>

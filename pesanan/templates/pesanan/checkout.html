@@ -1,0 +1,424 @@
+{% load static %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout</title>
+    <link rel="stylesheet" href="{% static 'css/checkout.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    {% include 'sidebar.html' %}
+
+    <!-- Main Content -->
+    <main class="content">
+        <header class="order-header">
+            <h1>KOPI SHINTA</h1>
+        </header>
+
+        <button type="button" class="back-button" onclick="confirmBatal()">← Batal</button>
+        
+        <!-- Kontainer Checkout -->
+         <div class="flex-container">
+            <!-- Bagian Kiri: Struk Pesanan -->
+             <div class="receipt-section">
+                <h3>Receipt Pesanan</h3>
+                <div class="receipt-header">
+                    <!-- Kiri: No. Order dan Layanan -->
+                     <div class="receipt-left">
+                        <p><span>No. Order</span> : {{ summary.nomor_order }}</p>
+                        <p><span>Layanan</span> : {{ summary.layanan }}</p>
+                    </div>
+                    <!-- Kanan: Nama dan Tanggal -->
+                     <div class="receipt-right">
+                        <p><span>Nama</span> : {{ summary.nama_pelanggan }}</p>
+                        <p><span>Tanggal</span> : {{ summary.tanggal|default:"-" }}</p>
+                    </div>
+                </div>
+                <!-- Tabel Pesanan -->
+                 <table>
+                    <thead>
+                        <tr>
+                            <th>Nama Item</th>
+                            <th>Jumlah</th>
+                            <th>Total Harga</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in summary.pesanan %}
+                        <tr>
+                            <td>{{ item.nama_item }}</td>
+                            <td>{{ item.jumlah }}</td>
+                            <td>{{ item.harga }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Bagian Kanan: Metode Pembayaran -->
+             <div class="payment-section">
+                <h3>Metode Pembayaran</h3>
+                <!-- Total Jumlah Item dan Harga -->
+                <div class="order-summary">
+                    <p><strong>Total Item:</strong> 
+                        <span id="total-qty-display">
+                            {{ summary.jumlah|default:0 }}
+                        </span>
+                    </p>
+                    <p><strong>Total Bayar:</strong> 
+                        <span id="total-price-display" data-total-harga="{{ summary.total_harga|default:0 }}">
+                            Rp {{ summary.total_harga|floatformat:0|intcomma }}
+                        </span>
+                    </p>
+                </div>
+                                                                                
+                <input type="hidden" id="hidden-metode-bayar" value="">
+                <!-- Tombol Pilihan Metode Pembayaran -->                
+                <button onclick="selectPayment('TUNAI')">Tunai</button>
+                <button onclick="selectPayment('QRIS')">QRIS</button>
+
+                <!-- Tampilan Metode Pembayaran Terpilih -->
+                <div id="selected-payment-method">
+                    <p><strong>Metode:</strong> <span id="payment-method-display">-</span></p>
+                </div>
+
+                <input type="hidden" id="nomor-order" value="{{ summary.nomor_order }}"> <!-- Nomor order -->                                
+                <!-- Form untuk nominal pembayaran -->
+                 <div id="metode-bayar"></div>
+                 <button onclick="updatePaymentMethod()">Simpan Metode Pembayaran</button>
+                    <!-- Kembalian akan ditampilkan di sini -->
+
+                <div id="kembalian-info" style="display: none; margin-top: 10px; color: green;">
+                </div>
+                 <!-- Tombol Status Bayar -->
+                  <div style="margin-top: 20px; text-align: center;">
+                    <button id="lunas-button" onclick="markAsPaid()">Lunas</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Fungsi untuk konfirmasi tombol Batal
+        function confirmBatal() {
+            const konfirmasi = confirm("Apakah yakin ingin membatalkan transaksi?");
+            if (konfirmasi) {
+                const nomorOrder = "{{ summary.nomor_order }}"; // Ambil nomor order dari template
+    
+                // Kirim request ke server untuk menghapus pesanan
+                fetch("{% url 'delete_order' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}" // Sertakan CSRF token
+                    },
+                    body: JSON.stringify({ nomor_order: nomorOrder })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message); // Pesan sukses
+                        window.location.href = "{% url 'tambah_order' %}"; // Redirect ke halaman tambah_order
+                    } else {
+                        alert("Gagal menghapus pesanan: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Terjadi kesalahan saat menghapus pesanan.");
+                });
+            }
+        }   
+
+        function selectPayment(method) {
+            const paymentDisplay = document.getElementById('payment-method-display');
+            const hiddenPaymentInput = document.getElementById('hidden-metode-bayar');
+            const paymentInput = document.getElementById('metode-bayar');
+                
+            // Perbarui tampilan metode pembayaran
+            paymentDisplay.innerText = method;
+
+            // Set nilai hidden input untuk metode pembayaran
+            hiddenPaymentInput.value = method;
+        
+            // Tambahkan input nominal pembayaran
+            paymentInput.innerHTML = `
+                <label for="nominal">Total Pembayaran :</label>
+                <input type="number" id="nominal" placeholder="Masukkan nominal" required />
+            `;
+        }
+
+        function validatePayment() {
+            // Ambil total harga sebagai angka
+            const totalHargaElement = document.getElementById("total-price-display");
+            const totalHarga = parseFloat(totalHargaElement.getAttribute("data-total-harga")) || 0;
+        
+            // Ambil nilai nominal pembayaran dari input
+            const nominalInput = document.getElementById("nominal");
+            const nominalPembayaran = parseFloat(nominalInput.value) || 0;
+        
+            // Ambil elemen untuk menampilkan kembalian
+            const kembalianInfo = document.getElementById("kembalian-info");
+        
+            if (!nominalInput) {
+                alert("Field pembayaran tidak ditemukan. Harap periksa kembali halaman.");
+                return false;
+            }
+        
+            if (nominalPembayaran < totalHarga) {
+                alert("Nominal pembayaran tidak mencukupi. Harap masukkan nilai yang sama atau lebih besar dari total harga.");
+                kembalianInfo.style.display = "none"; // Sembunyikan kembalian jika ada
+                return false;
+            }
+        
+            // Hitung kembalian jika pembayaran lebih besar
+            const kembalian = nominalPembayaran - totalHarga;
+            kembalianInfo.textContent = `Kembalian: Rp ${kembalian.toLocaleString("id-ID")}`;
+            kembalianInfo.style.display = "block"; // Tampilkan kembalian
+        
+            return true;
+        }
+                                        
+        function updatePaymentMethod() {
+            const nomorOrder = document.getElementById("nomor-order").value; // Ambil nomor order dari input
+            const metodeBayar = document.getElementById("hidden-metode-bayar").value; // Ambil metode bayar dari input hidden
+            const nominalPembayaran = parseFloat(document.getElementById("nominal").value) || 0; // Konversi ke angka
+        
+            // Validasi input metode bayar
+            if (!metodeBayar) {
+                alert("Silakan pilih metode pembayaran terlebih dahulu.");
+                return;
+            }
+            
+            if (!validatePayment()) {
+                return; // Hentikan proses jika validasi gagal
+            }
+        
+            // Kirim request ke server untuk memperbarui metode bayar
+            fetch("{% url 'update_payment_method' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}" // Sertakan CSRF token
+                },
+                body: JSON.stringify({
+                    nomor_order: nomorOrder,
+                    metode_bayar: metodeBayar,
+                    nominal_pembayaran: nominalPembayaran
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message); // Pesan sukses
+                } else {
+                    alert("Gagal memperbarui metode bayar: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Terjadi kesalahan saat memperbarui metode bayar.");
+            });
+        }
+                
+        // Fungsi untuk menandai status bayar sebagai lunas dan mencetak receipt
+        function markAsPaid() {
+            const nomorOrder = document.getElementById("nomor-order").value;
+            
+            // Kirim request ke server untuk memperbarui status
+            fetch("{% url 'mark_as_paid' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}" // Sertakan CSRF token
+                    },
+                    body: JSON.stringify({ nomor_order: nomorOrder })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message); // Pesan sukses
+                        printReceipt(); // Cetak receipt
+                        window.location.href = "{% url 'pesanan' %}"; // Redirect ke halaman pesanan
+                        } else {
+                            alert("Gagal memperbarui status: " + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        alert("Terjadi kesalahan saat memperbarui status.");
+                    });
+        }
+
+// Fungsi untuk mencetak receipt
+// Fungsi untuk mencetak receipt
+function printReceipt() {
+    // Ambil elemen-elemen yang diperlukan dari HTML
+    const metodeBayar = document.querySelector('#payment-method-display').textContent.trim() || "-";
+    const nominalInput = parseFloat(document.getElementById("nominal").value) || 0; // Nominal pembayaran
+    const totalHargaElement = document.getElementById("total-price-display");
+    const totalHarga = parseFloat(totalHargaElement.getAttribute("data-total-harga")) || 0; // Total harga dari atribut data
+    const kembalianInfo = document.getElementById("kembalian-info").textContent; // Ambil elemen kembalian yang sudah dihitung di HTML
+
+    // Pastikan nilai kembalian dihitung ulang jika tidak ada di elemen
+    const kembalian = nominalInput > totalHarga ? nominalInput - totalHarga : 0;
+
+    // Template untuk konten receipt
+    const receiptHTML = `
+        <html>
+            <head>
+                <title>Receipt</title>
+                <style>
+                    body {
+                        font-family: 'Courier New', Courier, monospace;
+                        font-size: 9px;
+                        margin: 0;
+                        padding: 0;
+                        width: 58mm; /* Ukuran thermal printer */
+                    }
+                    .header, .footer {
+                        text-align: center;
+                    }
+                    .header img {
+                        max-width: 50%;
+                        height: auto;
+                        display: block;
+                        margin-bottom: 5px;
+                    }
+                    .line {
+                        border-top: 1px dashed #000;
+                        margin: 10px 0;
+                    }
+                    .content {
+                        padding: 0 5px; /* Margin konten */
+                    }
+                    .row {
+                        display: flex;
+                        justify-content: space-between; /* Membuat elemen sejajar kanan-kiri */
+                        width: 100%;
+                    }
+                    .row span {
+                        display: inline-block;
+                        word-wrap: break-word;
+                    }
+                    .center {
+                        text-align: center;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 5px;
+                    }
+                    table thead {
+                        border: none; /* Hilangkan border */
+                        font-size: 10px;
+                        padding: 2px 0;
+                        text-align: center;
+                    }
+                    table td {
+                        border: none; /* Hilangkan border */
+                        font-size: 9px;
+                        padding: 2px 0;
+                        text-align: left;
+                    }
+                    .item td {
+                        text-align: right;
+                    }
+                    .total {
+                        font-weight: bold;
+                        text-align: right;
+                    }
+                    .footer {
+                        margin-top: 10px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <img src="{% static 'images/logo.png' %}" alt="Logo">
+                    <p>KOPI SHINTA</p>
+                    <p>${new Date().toLocaleString()}</p>
+                </div>
+                <div class="line"></div>
+                <div class="content">
+                    <div class="row">
+                        <span class="label">No. Order</span>
+                        <span class="value"> {{ summary.nomor_order }}</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">Layanan</span>
+                        <span class="value">{{ summary.layanan }}</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">Nama</span>
+                        <span class="value">{{ summary.nama_pelanggan }}</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">Tanggal</span>
+                        <span class="value">{{ summary.tanggal|default:"-" }}</span>
+                    </div>
+                    <div class="line"></div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama Item</th>
+                                <th>Jumlah</th>
+                                <th>Harga</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in summary.pesanan %}
+                            <tr>
+                                <td>{{ item.nama_item }}</td>
+                                <td class="center">{{ item.jumlah }}</td>
+                                <td class="item">Rp {{ item.harga|floatformat:0 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="line"></div>
+                    <div class="row">
+                        <span class="label">Total Item</span>
+                        <span class="value">{{ summary.jumlah }}</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">Total Harga</span>
+                        <span class="value">Rp ${totalHarga.toLocaleString("id-ID")}</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">Total Dibayar</span>
+                        <span class="value">Rp ${nominalInput.toLocaleString("id-ID")}</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">Metode Bayar</span>
+                        <span class="value">${metodeBayar}</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">Kembalian</span>
+                        <span class="value">${kembalian > 0 ? `Rp ${kembalian.toLocaleString("id-ID")}` : "Rp 0"}</span>
+                    </div>
+                    <div class="line"></div>
+                </div>
+                <div class="footer">
+                    <p>--- Mari Dibicarakan ---</p>
+                </div>
+            </body>
+        </html>
+    `;
+
+    // Membuka jendela cetak baru
+    const printWindow = window.open("", "Cetak Receipt", "width=350,height=600"); // Lebar sesuai printer thermal
+    printWindow.document.write(receiptHTML);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+}
+    </script>
+</body>
+</html>

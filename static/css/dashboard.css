@@ -1,0 +1,393 @@
+/* Global Styles */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column; /* Atur layout kolom untuk tampilan mobile */
+    background-color: #f4f4f4; /* Warna latar belakang default */
+    overflow: hidden; /* Mencegah scrollbar muncul */
+}
+
+.container {
+    display: flex;
+    flex-grow: 1;
+    flex-wrap: wrap; /* Membungkus konten jika layar lebih kecil */
+}
+
+/* Sidebar */
+/* Logo di sidebar */
+.sidebar img {
+    max-width: 80%; /* Pastikan logo tidak lebih besar dari sidebar */
+    height: auto; /* Pertahankan rasio gambar */
+    margin-bottom: 20px; /* Spasi di bawah logo */
+    display: block; /* Memastikan elemen gambar adalah block */
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0; /* Tetap di sisi kiri layar */
+    z-index: 1000; /* Pastikan sidebar berada di atas elemen lain */
+    overflow-y: auto; /* Scroll jika isi melebihi tinggi viewport */
+    width: 250px;
+    height: 100vh; /* Mengisi tinggi layar penuh */
+    background-color: #b8b8b8;
+    font-family: 'Arial', sans-serif;
+    font-size: 18px;
+    color: #ffffff;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    line-height: 1.5;
+    transition: transform 0.3s ease; /* Animasi saat sidebar muncul/tersembunyi */
+}
+
+.sidebar.hidden {
+    transform: translateX(-250px); /* Sembunyikan sidebar di luar layar */
+}
+
+/* Link navigasi */
+.sidebar nav a {
+    text-decoration: none; /* Hilangkan garis bawah */
+    color: white; /* Warna teks */
+    margin: 15px 0; /* Spasi antar link */
+    display: block; /* Pastikan setiap link mengambil baris baru */
+    padding: 15px; /* Padding untuk estetika */
+    border-radius: 5px; /* Sudut sedikit melengkung */
+    text-align: left; /* Pusatkan teks jika ada beberapa baris */
+    transition: background-color 0.3s ease; /* Animasi hover */
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Link aktif atau saat hover */
+.sidebar nav a.active,
+.sidebar nav a:hover {
+    background-color: #a38191; /* Warna latar belakang saat aktif atau hover */
+    font-weight: bold; /* Teks lebih tebal */
+    color: #ffffff; /* Warna teks */
+}
+
+/* Navigasi di sidebar */
+.sidebar nav {
+    display: flex;
+    flex-direction: column; /* Elemen link disusun secara vertikal */
+    width: 100%; /* Link mengisi lebar penuh */
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: #868686; /* Warna latar belakang saat aktif atau hover */
+    padding: 20px;
+}
+
+header h1 {
+    font-size: 32px;
+    margin: 0;
+    text-align: center;
+}
+
+header .logout-button {
+    background-color: #d9534f;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+/* Submenu Styling */
+.menu {
+    list-style: none;
+    padding: 0;
+}
+
+.menu-item {
+    margin-bottom: 10px;
+}
+
+.menu-btn {
+    background: none;
+    color: #ffffff;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.menu-btn:hover {
+    background-color: #8b6f82; /* Warna hover */
+}
+
+.menu-btn.active {
+    background-color: #a38191; /* Warna untuk submenu aktif */
+    color: #ffffff;
+}
+
+.submenu {
+    list-style: none;
+    padding-left: 20px; /* Indentasi submenu */
+    margin: 10px 0;
+}
+
+.submenu a {
+    display: block;
+    color: #ffffff;
+    font-size: 16px;
+    text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.submenu a:hover {
+    background-color: #8b6f82; /* Warna hover submenu */
+    color: #ffffff;
+}
+
+.submenu a.active {
+    background-color: #a38191; /* Warna submenu aktif */
+    font-weight: bold;
+}
+
+/* Tombol menu untuk ponsel */
+.menu-toggle {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1100;
+    background-color: #868686;
+    color: white;
+    border: none;
+    font-size: 20px;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: none; /* Tidak tampil di layar besar */
+}
+
+/* Main Content */
+.main-content {
+    flex-grow: 1;
+    margin-left: 250px; /* Ruang untuk sidebar */
+    padding: 20px;
+    background-color: #f4f4f4;
+    overflow-x: auto;
+    transition: margin-left 0.3s ease;
+    overflow-y: auto; /* Scroll di dalam main content, bukan di seluruh halaman */
+    height: calc(100vh - 80px); /* 80px adalah perkiraan tinggi header */
+
+}
+
+/* Main Grid untuk Tabel Pendapatan, Item Terjual, dan Data Pesanan */
+.main-grid {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr; /* Dua kolom besar dan satu lebih kecil untuk Data Pesanan */
+    gap: 20px;
+    margin-bottom: 20px;
+    width: auto;
+}
+
+/* Grid Container untuk Tabel Best Seller dan Sold Out */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Dua kolom seimbang */
+    gap: 20px;
+    width: auto;
+    margin-bottom: 20px;
+}
+
+/* Styling untuk Semua Table Container */
+.table-container, .order-summary-container {
+    background: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Styling untuk Tabel */
+.billing-table, .sold-table, .best-seller-table, .sold-out-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.billing-table th, .sold-table th, .best-seller-table th, .sold-out-table th,
+.billing-table td, .sold-table td, .best-seller-table td, .sold-out-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+/* Styling untuk Data Pesanan */
+.order-summary-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.order-summary-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    background: #f8f8f8;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    border: 1px solid #ccc;
+    text-align: center;
+}
+
+table th {
+    text-align: center;
+    background-color: #4a4a4a;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 8px;
+    border: 1px solid #ddd;
+}
+
+table td {
+    text-align: left;
+    padding: 8px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+}
+
+table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+table tbody tr:hover {
+    background-color: #e8e8e8;
+}
+
+/* RESPONSIVE DESIGN */
+/* Untuk layar dengan lebar maksimum 1024px (Tablet) */
+@media screen and (max-width: 1024px) {
+    .main-grid {
+        grid-template-columns: 1fr 1fr; /* 2 kolom */
+    }
+
+    .grid-container {
+        grid-template-columns: 1fr; /* 1 kolom agar lebih nyaman di tablet */
+    }
+
+    .sidebar {
+        width: 200px; /* Sidebar lebih kecil di layar tablet */
+    }
+
+    .main-content {
+        margin-left: 200px; /* Sesuaikan dengan sidebar */
+    }
+}
+
+/* Untuk layar dengan lebar maksimum 768px (Tablet kecil & HP besar) */
+@media screen and (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        width: 100%; /* Sidebar menjadi full width */
+        height: auto;
+        top: 0;
+        left: 0;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+    }
+
+    .sidebar nav {
+        display: none; /* Sembunyikan menu di sidebar */
+    }
+
+    .menu-toggle {
+        display: block; /* Tampilkan tombol menu */
+    }
+
+    .main-content {
+        margin-left: 0; /* Hapus margin kiri agar konten tidak tergeser */
+        padding-top: 80px; /* Beri ruang di atas untuk sidebar */
+    }
+
+    .main-grid {
+        grid-template-columns: 1fr; /* 1 kolom agar nyaman di HP */
+    }
+
+    .grid-container {
+        grid-template-columns: 1fr; /* Semua elemen dalam 1 kolom */
+    }
+}
+
+/* Untuk layar dengan lebar maksimum 480px (HP kecil) */
+@media screen and (max-width: 480px) {
+    body {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 10px;
+        width: 100%;
+        height: auto;
+    }
+
+    .sidebar nav {
+        display: none; /* Menu sidebar disembunyikan */
+    }
+
+    .menu-toggle {
+        display: block;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 10px;
+        padding-top: 80px; /* Ruang untuk sidebar */
+    }
+
+    .main-grid {
+        grid-template-columns: 1fr; /* Semua dalam satu kolom */
+    }
+
+    .grid-container {
+        grid-template-columns: 1fr;
+    }
+
+    .table-container, .order-summary-container {
+        padding: 10px;
+    }
+
+    table {
+        font-size: 12px; /* Ukuran teks lebih kecil di layar kecil */
+    }
+
+    .summary-item {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    .logout-button {
+        font-size: 12px;
+        padding: 5px 10px;
+    }
+}

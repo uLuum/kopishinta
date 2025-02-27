@@ -1,0 +1,42 @@
+<aside class="sidebar" id="sidebar">
+    {% load static %}
+    <img src="{% static 'images/logo.png' %}" alt="Logo">
+    <nav>
+        <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
+        <a href="{% url 'menu' %}" class="{% if request.resolver_match.url_name == 'menu' %}active{% endif %}">Menu</a>
+        <a href="{% url 'pesanan' %}" class="{% if request.resolver_match.url_name == 'pesanan' %}active{% endif %}">Pesanan</a>
+
+        <ul class="menu">
+            <!-- Menu lainnya -->
+            <li class="menu-item">
+                <button class="menu-btn" onclick="toggleSubmenu('laporan-submenu')">Laporan</button>
+                <ul class="submenu" id="laporan-submenu" style="display: none;">
+                    <li><a href="{% url 'laporan_keuangan' %}">Laporan Keuangan</a></li>
+                    <li><a href="{% url 'laporan_inventory' %}">Laporan Inventory</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</aside>
+
+<!-- Tombol untuk membuka sidebar -->
+<button class="menu-toggle" onclick="toggleSidebar()">☰ Menu</button>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const isHidden = sidebar.classList.contains("hidden");
+
+        // Toggle class untuk menampilkan/menyembunyikan sidebar
+        if (isHidden) {
+            sidebar.classList.remove("hidden");
+        } else {
+            sidebar.classList.add("hidden");
+        }
+    }
+
+    function toggleSubmenu(id) {
+        const submenu = document.getElementById(id);
+        submenu.style.display = submenu.style.display === "none" ? "block" : "none";
+    }
+</script>

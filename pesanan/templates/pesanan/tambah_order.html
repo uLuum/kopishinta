@@ -1,0 +1,355 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambah Order</title>
+    <link rel="stylesheet" href="{% static 'css/tambah_order.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    {% include 'sidebar.html' %}
+
+    <!-- Main Content -->
+    <main class="content">
+        <header class="order-header">
+            <h1>KOPI SHINTA</h1>
+        </header>
+
+        <button type="button" class="back-button" onclick="confirmBatal()">← Batal</button>
+
+        <!-- Form Input Pesanan -->
+        <form class="order-form" method="POST" action="{% url 'checkout' order_number='new' %}" id="checkout-form">
+            {% csrf_token %}
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="layanan">Layanan:</label>
+                    <input type="radio" id="dine-in" name="layanan" value="Dine In"> Dine In
+                    <input type="radio" id="takeaway" name="layanan" value="Takeaway"> Takeaway
+                </div>
+                <div class="form-group">
+                    <label for="nama-pelanggan">Nama:</label>
+                    <input type="text" id="nama-pelanggan" name="nama_pelanggan" placeholder="Nama Pelanggan">
+                </div>
+            </div>
+        </form>
+        
+        <!-- Grid Divider -->
+        <div class="grid-divider">
+            <!-- Bagian Kiri: Tabel Daftar Menu -->
+             <div class="menu-section">
+                
+                <h3>Daftar Menu</h3>
+                <div class="search-bar">
+                    <input type="text" id="search-menu" placeholder="Cari SKU/Nama Item..." onkeyup="filterMenu()" />
+                </div>
+                <div class="scrollable">
+                    <table id="menu-table">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Nama Item</th>
+                                <th>Harga</th>
+                                <th>Stok Saat ini</th>
+                                <th>Tambah</th>
+                            </tr>
+                        </thead>
+                        <tbody id="menu-body">
+                            {% for item in menu_items %}
+                            <tr data-idmenu="{{ item.idmenu }}" data-sku="{{ item.sku }}" data-name="{{ item.nama_item }}" data-price="{{ item.harga }}" data-stock="{{ item.stok_saat_ini }}">
+                                <td>{{ item.sku }}</td> <!-- SKU -->
+                                <td>{{ item.nama_item }}</td> <!-- Nama Item -->
+                                <td>Rp {{ item.harga|floatformat:0 }}</td> <!-- Harga -->
+                                <td>{{ item.stok_saat_ini }}</td> <!-- Stok -->
+                                <td>
+                                    <button onclick="addToOrder(this)">Tambah</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Bagian Kanan: List Pesanan -->
+            <div class="order-section">
+                <h3>List Pesanan</h3>
+                <!-- Tambahkan pembungkus scrollable di sekitar tabel -->
+                <div class="scrollable">
+                    <table id="order-table">
+                        <thead>
+                            <tr>
+                                <th>Nama Item</th>
+                                <th>Jumlah</th>
+                                <th>Harga</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="order-body">
+                            <!-- Data akan dimasukkan di sini -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>            
+                <p>Total Item: <span id="total-qty">0</span></p>
+                <p>Total Harga: <span id="total-price">Rp 0</span></p>
+                <button class="reset-button" onclick="resetOrder()">Hapus</button> <!-- Tombol Reset -->
+                <button id="checkout-btn">Checkout</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Fungsi untuk konfirmasi tombol Batal
+        function confirmBatal() {
+            const konfirmasi = confirm("Apakah yakin ingin membatalkan input data?");
+            if (konfirmasi) {
+                // Jika "Ya", arahkan ke halaman pesanan
+                window.location.href = "{% url 'pesanan' %}";
+            }
+            // Jika "Tidak", tetap di halaman ini (tidak perlu tindakan tambahan)
+        }      
+    
+        function addToOrder(button) {
+            const row = button.closest('tr');
+            const idmenu = row.getAttribute('data-idmenu');
+            const sku = row.getAttribute('data-sku');
+            const namaItem = row.getAttribute('data-name');
+            const harga = parseFloat(row.getAttribute('data-price'));
+            const stok = parseInt(row.getAttribute('data-stock'));
+        
+            // Validasi stok dan harga
+            if (stok <= 0) {
+                alert("Stok tidak mencukupi untuk item ini.");
+                return;
+            }
+            if (isNaN(harga) || harga <= 0) {
+                alert("Harga tidak valid.");
+                return;
+            }
+        
+            // Cek apakah item sudah ada di pesanan
+            const existingRow = Array.from(document.querySelectorAll("#order-body tr")).find(
+                (r) => r.getAttribute("data-idmenu") === idmenu
+            );
+        
+            if (existingRow) {
+                // Jika item sudah ada, tambahkan qty langsung
+                const qtyCell = existingRow.querySelector(".qty");
+                const priceCell = existingRow.querySelector(".price");
+        
+                const currentQty = parseInt(qtyCell.textContent);
+                const newQty = currentQty + 1;
+        
+                if (newQty > stok) {
+                    alert("Jumlah melebihi stok yang tersedia!");
+                    return;
+                }
+        
+                // Perbarui qty dan harga total item
+                qtyCell.textContent = newQty;
+                priceCell.textContent = `Rp ${(newQty * harga).toLocaleString("id-ID")}`;
+        
+                // Perbarui total keseluruhan
+                updateTotals();
+                return;
+            }
+        
+            // Jika item belum ada, tambahkan baris baru ke order-table
+            const orderRow = `
+                <tr data-idmenu="${idmenu}" data-sku="${sku}" data-stock="${stok}">
+                    <td>${namaItem}</td>
+                    <td class="qty">1</td>
+                    <td class="price">Rp ${harga.toLocaleString("id-ID")}</td>
+                    <td>
+                        <button onclick="editOrder(this)">Edit</button>
+                        <button onclick="removeOrder(this)">Hapus</button>
+                    </td>
+                </tr>
+            `;
+        
+            document.querySelector('#order-body').insertAdjacentHTML('beforeend', orderRow);
+            updateTotals();
+        }        
+                
+        // Fungsi untuk menghapus item dari order-table
+        function removeOrder(button) {
+            const row = button.closest("tr");
+            row.remove();
+            updateTotals();
+        }       
+
+        function resetOrder() {
+            const orderTableBody = document.querySelector("#order-table tbody");
+        
+            // Konfirmasi sebelum reset
+            const confirmReset = confirm("Apakah Anda yakin ingin menghapus semua pesanan?");
+            if (confirmReset) {
+                // Hapus semua baris dalam order-body
+                orderTableBody.innerHTML = "";
+        
+                // Reset total item dan total harga
+                document.querySelector("#total-qty").textContent = "0";
+                document.querySelector("#total-price").textContent = "Rp 0";
+        
+                alert("Pesanan berhasil direset!");
+            }
+        }
+                
+        // Fungsi untuk mengedit jumlah item pada order-table
+        function editOrder(button) {
+            const row = button.closest("tr");
+            const qtyCell = row.querySelector(".qty");
+            const priceCell = row.querySelector(".price");
+            const idmenu = row.getAttribute('data-idmenu');
+        
+            // Ambil stok dan harga dari tabel menu
+            const menuRow = document.querySelector(`#menu-body tr[data-idmenu="${idmenu}"]`);
+            if (!menuRow) {
+                alert("Data menu tidak ditemukan.");
+                return;
+            }
+            const stock = parseInt(menuRow.dataset.stock);
+            const price = parseFloat(menuRow.dataset.price);
+        
+            // Prompt untuk jumlah baru
+            const newQty = parseInt(prompt("Masukkan jumlah baru:", qtyCell.textContent));
+        
+            // Validasi jumlah baru
+            if (isNaN(newQty) || newQty <= 0) {
+                alert("Jumlah tidak valid. Masukkan angka lebih besar dari 0.");
+                return;
+            }
+            if (newQty > stock) {
+                alert("Jumlah melebihi stok yang tersedia!");
+                return;
+            }
+        
+            // Perbarui jumlah dan harga total untuk item
+            qtyCell.textContent = newQty;
+            priceCell.textContent = `Rp ${(newQty * price).toLocaleString("id-ID")}`; // Gunakan toLocaleString
+        
+            // Perbarui total keseluruhan
+            updateTotals();
+        }
+        
+        // Fungsi untuk memperbarui total item dan total harga
+        function updateTotals() {
+            const rows = document.querySelectorAll("#order-table tbody tr");
+            let totalQty = 0;
+            let totalPrice = 0;
+        
+            rows.forEach((row) => {
+                const qty = parseInt(row.querySelector(".qty").textContent);
+                const priceText = row.querySelector(".price").textContent;
+                const price = parseInt(priceText.replace(/[^\d]/g, "")); // Hapus semua karakter kecuali angka
+         
+                totalQty += qty;
+                totalPrice += price;
+            });
+        
+            document.querySelector("#total-qty").textContent = totalQty;
+            document.querySelector("#total-price").textContent = `Rp ${totalPrice.toLocaleString("id-ID")}`;
+            
+            // Perbarui total di halaman checkout.html jika ada elemen terkait
+            const totalQtyDisplay = document.querySelector("#total-qty-display");
+            const totalPriceDisplay = document.querySelector("#total-price-display");
+
+            if (totalQtyDisplay && totalPriceDisplay) {
+                totalQtyDisplay.textContent = totalQty;
+                totalPriceDisplay.textContent = `Rp ${totalPrice.toLocaleString("id-ID")}`;
+            }
+        }        
+        
+        // Fungsi untuk memfilter menu berdasarkan input pencarian
+        function filterMenu() {
+            const searchInput = document.querySelector("#search-menu").value.toLowerCase();
+            const menuRows = document.querySelectorAll("#menu-body tr");
+            
+            menuRows.forEach((row) => {
+                const itemName = row.dataset.name.toLowerCase();
+                if (itemName.includes(searchInput)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+
+    // Fungsi untuk checkout
+    document.getElementById('checkout-btn').addEventListener('click', function () {
+        // Ambil data pesanan dari order-body
+        const orderData = [];
+        const rows = document.querySelectorAll('#order-body tr');
+        
+        rows.forEach(row => {
+            orderData.push({
+                idmenu: row.getAttribute('data-idmenu'), // Ambil idmenu dari atribut data-idmenu
+                sku: row.getAttribute('data-sku'),       // SKU (ditambahkan)
+                nama_item: row.cells[0].innerText,  // Nama item dari kolom pertama
+                jumlah: parseInt(row.cells[1].innerText),// Jumlah
+                harga: row.cells[2].innerText.replace(/[^\d]/g, "") // Harga sebagai string angka
+            });
+        });
+
+        // Ambil data dari order-form
+        const namaPelanggan = document.getElementById('nama-pelanggan').value;  // Ambil input nama
+        const layanan = document.querySelector('input[name="layanan"]:checked')?.value || '';    
+
+        // Validasi input form sebelum checkout
+        if (!namaPelanggan || !layanan) {
+            alert('Harap isi Nama Pelanggan dan pilih Layanan sebelum checkout.');
+            return;
+        }
+        
+        if (orderData.length === 0) {
+            alert('Pesanan kosong. Harap tambahkan item terlebih dahulu.');
+            return;
+        }
+    
+        
+        // Tambahkan sebelum fetch
+        console.log("Data yang dikirim ke server:", {
+            nama_pelanggan: namaPelanggan,
+            layanan: layanan,
+            pesanan: orderData
+        });       
+
+        // Kirim data gabungan ke server menggunakan Fetch API
+        fetch("{% url 'checkout' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                nama_pelanggan: namaPelanggan,
+                layanan: layanan,
+                pesanan: orderData,
+                source: 'django',  // Tandai bahwa ini berasal dari Django
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Respons dari server:', data);  // Debug respons dari server
+        
+            if (data.success) {
+                alert(data.message); // Tampilkan pesan sukses
+                if (data.redirect_url) {
+                    // Redirect ke URL checkout
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert('Redirect URL tidak tersedia.');
+                }
+            } else {
+                alert(`Gagal checkout: ${data.message}`);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu</title>
+    <link rel="stylesheet" href="{% static 'css/menu.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+</head>
+<body>
+    <!-- Sidebar -->
+    {% include 'sidebar.html' %}
+    
+    <!-- Main Content -->
+    <main class="content">
+        <header class="menu-header">
+            <h1>KOPI SHINTA</h1>
+            <a href="{% url 'logout' %}" class="logout-button">Keluar</a>
+        </header>
+
+        <div class="menu-submenu">
+            <h2>Daftar Menu</h2>
+        </div>
+        
+        <!-- Search Bar and Add Button -->
+         <div class="menu-controls">
+            <input type="text" id="search" placeholder="Cari berdasarkan SKU atau Nama Item...">
+            <button class="add-menu-button" onclick="window.location.href='{% url 'tambah_menu' %}'">Tambah Menu</button>
+        </div>
+        
+        <!-- Scrollable Table -->
+        <div class="scrollable-container">
+            <table class="menu-table">
+                <thead>
+                    <tr>
+                        <th class="col-gambar">Gambar</th>
+                        <th class="col-sku">SKU</th>
+                        <th class="col-nama">Nama Item</th>
+                        <th class="col-harga">Harga</th>
+                        <th class="col-kategori">Kategori</th>
+                        <th class="col-stok">Stok Saat Ini</th>
+                        <th class="col-terjual">Stok Terjual</th>
+                        <th class="col-tindakan">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in menu_items %}
+                    <tr>
+                        <td><img src="{{ item.gambar }}" alt="Gambar Item" class="item-image"></td>
+                        <td>{{ item.sku }}</td>
+                        <td>{{ item.nama_item }}</td>
+                        <td>Rp {{ item.harga|floatformat:0 }}</td>
+                        <td>{{ item.kategori }}</td>
+                        <td>{{ item.stok_saat_ini }}</td> <!-- Stok Saat Ini -->
+                        <td>{{ item.stok_terjual }}</td> <!-- Stok Terjual -->
+                        <td class="actions">
+                            <a href="{% url 'edit_menu' item.idmenu %}">
+                                <button type="button" class="edit-button">Edit</button>
+                            </a>
+                            <form method="POST" action="{% url 'delete_menu' item.idmenu %}" style="display: inline;" 
+                                onsubmit="return confirm('Apakah Anda yakin ingin menghapus menu ini?');">
+                                {% csrf_token %}
+                                <button type="submit" class="delete-button">Hapus</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center;">Tidak ada data menu tersedia.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>        
+    </main>
+    <script>
+        document.getElementById('search').addEventListener('input', function () {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.menu-table tbody tr');
+    
+            rows.forEach(row => {
+                const sku = row.cells[1].textContent.toLowerCase();
+                const namaItem = row.cells[2].textContent.toLowerCase();
+    
+                if (sku.includes(filter) || namaItem.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        async function fetchInventoryData() {
+            try {
+                const response = await fetch('/api/laporan/inventory/'); // Endpoint Django
+                if (!response.ok) {
+                    throw new Error(`Gagal mengambil data inventory. Status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log("Data berhasil diambil:", data); // Debugging
+                updateTable(data.inventory); // Pastikan data.inventory sesuai struktur API
+                updateTotalTerjual(data.inventory);
+            } catch (error) {
+                console.error("Error:", error); // Log error untuk debugging
+            }
+        }      
+        
+        async function refreshMenuData() {
+            try {
+                const response = await fetch('/api/menu/data/');  // Ganti dengan URL endpoint API Anda
+                if (!response.ok) {
+                    throw new Error(`Gagal mengambil data menu. Status: ${response.status}`);
+                }
+        
+                const data = await response.json();
+                const tableBody = document.querySelector('.menu-table tbody');
+                tableBody.innerHTML = ''; // Kosongkan tabel sebelum memperbarui
+        
+                data.menu_items.forEach(item => {
+                    const row = `
+                        <tr>
+                            <td>${item.sku}</td>
+                            <td>${item.nama_item}</td>
+                            <td>Rp ${item.harga}</td>
+                            <td>${item.kategori}</td>
+                            <td>${item.stok_saat_ini}</td>
+                            <td>${item.stok_terjual}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+        
+                console.log("Data menu berhasil diperbarui.");
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+        
+        // Panggil refreshMenuData saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', refreshMenuData);
+        
+        async function refreshMenuTable() {
+            try {
+                const response = await fetch('/api/menu/items/');
+                if (!response.ok) {
+                    throw new Error(`Gagal memuat data menu. Status: ${response.status}`);
+                }
+        
+                const data = await response.json();
+                const tableBody = document.querySelector('tbody');
+                tableBody.innerHTML = ''; // Kosongkan tabel sebelum memperbarui
+        
+                data.menu_items.forEach(item => {
+                    const row = `
+                        <tr>
+                            <td><img src="${item.gambar}" alt="Gambar Item" class="item-image"></td>
+                            <td>${item.sku}</td>
+                            <td>${item.nama_item}</td>
+                            <td>Rp ${item.harga}</td>
+                            <td>${item.kategori}</td>
+                            <td>${item.stok_saat_ini}</td>
+                            <td>${item.stok_terjual}</td>
+                            <td class="actions">
+                                <a href="/menu/edit/${item.idmenu}/"><button type="button" class="edit-button">Edit</button></a>
+                                <form method="POST" action="/menu/delete/${item.idmenu}/" style="display: inline;"
+                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus menu ini?');">
+                                    <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                                    <button type="submit" class="delete-button">Hapus</button>
+                                </form>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("Error memuat data menu:", error);
+            }
+        }
+        
+        // Panggil fungsi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshMenuTable();
+        });        
+    </script>    
+</body>
+</html>

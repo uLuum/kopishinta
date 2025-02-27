@@ -1,0 +1,303 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <script>
+        // Menampilkan waktu otomatis
+        function updateTime() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            document.getElementById('time-display').innerText = now.toLocaleDateString('id-ID', options);
+        }
+        setInterval(updateTime, 1000); // Update setiap detik
+        window.onload = updateTime; // Set waktu saat halaman di-load
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+</head>
+<body>
+    {% include 'sidebar.html' %}
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="main-header">
+            <h1>KOPI SHINTA</h1>
+            <div id="time-display"></div>
+            <a href="{% url 'logout' %}" class="logout-button">Keluar</a>
+        </header>
+        
+        <!-- Section: Tabel Utama (Pendapatan, Item Terjual, Data Pesanan) -->
+         <section class="main-grid">
+            <!-- Tabel Pendapatan -->
+            <div class="table-container">
+                <h3>PENDAPATAN</h3>
+                <table class="billing-table">
+                    <thead>
+                        <tr>
+                            <th>Periode</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Hari Ini</td>
+                            <td id="today-total">Rp 0</td>
+                        </tr>
+                        <tr>
+                            <td>Kemarin</td>
+                            <td id="yesterday-total">Rp 0</td>
+                        </tr>
+                        <tr>
+                            <td>Minggu Ini</td>
+                            <td id="week-total">Rp 0</td>
+                        </tr>
+                        <tr>
+                            <td>Bulan Ini</td>
+                            <td id="month-total">Rp 0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Tabel Penjualan -->
+             <div class="table-container">
+                <h3>ITEM TERJUAL</h3>
+                <table class="sold-table">
+                    <thead>
+                        <tr>
+                            <th>Periode</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Hari Ini</td>
+                            <td id="today-sold">0</td>
+                        </tr>
+                        <tr>
+                            <td>Kemarin</td>
+                            <td id="yesterday-sold">0</td>
+                        </tr>
+                        <tr>
+                            <td>Minggu Ini</td>
+                            <td id="week-sold">0</td>
+                        </tr>
+                        <tr>
+                            <td>Bulan Ini</td>
+                            <td id="month-sold">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Data Pesanan -->
+            <div class="order-summary-container">
+                <h3>DATA PESANAN</h3>
+                <div class="order-summary-box">
+                    <div class="summary-item">
+                        <p>On Order (Belum Bayar)</p>
+                        <span id="on-order-count">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <p>Pesanan Baru</p>
+                        <span id="pesanan-baru-count">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <p>Pesanan Diproses</p>
+                        <span id="pesanan-diproses-count">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <p>Pesanan Selesai Disajikan</p>
+                        <span id="pesanan-selesai-count">0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section: Tabel Best Seller dan Sold Out -->
+        <section class="grid-container">
+            <!-- Best Seller -->
+             <div class="table-container">
+                <h3>Best Seller</h3>
+                <table class="best-seller-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>SKU</th>
+                            <th>Item Name</th>
+                            <th>Terjual</th>
+                        </tr>
+                    </thead>
+                    <tbody id="best-seller-body">
+                        <!-- Data akan dimuat secara dinamis -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Sold Out -->
+            <div class="table-container">
+                <h3>Sold Out</h3>
+                <table class="sold-out-table">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>SKU</th>
+                            <th>Item Name</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sold-out-body">
+                        <!-- Data akan dimuat secara dinamis -->
+                    </tbody>
+                </table>
+            </div>
+        </section>  
+    </main>
+    
+        <script>
+            document.addEventListener('DOMContentLoaded', async () => {
+                const todayTotalElem = document.getElementById('today-total');
+                const yesterdayTotalElem = document.getElementById('yesterday-total');
+                const weekTotalElem = document.getElementById('week-total');
+                const monthTotalElem = document.getElementById('month-total');
+            
+                // Fungsi untuk memformat angka ke dalam format Rupiah
+                function formatRupiah(value) {
+                    return new Intl.NumberFormat('id-ID', {
+                        style: 'currency',
+                        currency: 'IDR',
+                        minimumFractionDigits: 0
+                    }).format(value);
+                }
+
+                // Fungsi untuk mengambil data dari API
+                async function fetchBillingData() {
+                    try {
+                        const response = await fetch('/api/billing/');
+                        if (!response.ok) {
+                            throw new Error('Gagal mengambil data billing.');
+                        }
+                        const data = await response.json();
+                        console.log("Data Billing:", data);
+        
+                        // Perbarui tabel pendapatan (Billing)
+                        todayTotalElem.textContent = formatRupiah(data.total_today); // Hari ini
+                        yesterdayTotalElem.textContent = formatRupiah(data.total_yesterday); // Kemarin
+                        weekTotalElem.textContent = formatRupiah(data.total_week); // Minggu ini
+                        monthTotalElem.textContent = formatRupiah(data.total_month); // Bulan ini
+                    } catch (error) {
+                        console.error('Error fetching billing data:', error);
+                    }
+                }
+        
+                // Panggil fungsi fetchBillingData saat halaman dimuat
+                fetchBillingData();
+            });
+        
+            document.addEventListener('DOMContentLoaded', async () => {
+                const soldTodayElem = document.getElementById('today-sold');
+                const soldYesterdayElem = document.getElementById('yesterday-sold');
+                const soldWeekElem = document.getElementById('week-sold');
+                const soldMonthElem = document.getElementById('month-sold');
+            
+                // Fungsi untuk memperbarui data sold-table
+                async function fetchInventoryData() {
+                    try {
+                        const response = await fetch('/api/inventory/');
+                        if (!response.ok) {
+                            throw new Error('Gagal mengambil data inventory.');
+                        }
+            
+                        const data = await response.json();
+                        console.log("Data Inventory:", data);
+            
+                        // Perbarui tabel sold-table
+                        soldTodayElem.textContent = data.total_today.toLocaleString('id-ID');
+                        soldYesterdayElem.textContent = data.total_yesterday.toLocaleString('id-ID');
+                        soldWeekElem.textContent = data.total_week.toLocaleString('id-ID');
+                        soldMonthElem.textContent = data.total_month.toLocaleString('id-ID');
+                    } catch (error) {
+                        console.error('Error fetching inventory data:', error);
+                    }
+                }
+            
+                // Panggil fungsi fetchInventoryData saat halaman dimuat
+                fetchInventoryData();
+            });
+            
+            document.addEventListener('DOMContentLoaded', async () => {
+                const bestSellerBody = document.getElementById('best-seller-body');
+                const soldOutBody = document.getElementById('sold-out-body');
+            
+                // Fungsi untuk memuat data Best Seller dan Sold Out
+                async function fetchBestSellerAndSoldOutData() {
+                    try {
+                        const response = await fetch('/api/best-seller-sold-out/');
+                        if (!response.ok) {
+                            throw new Error('Gagal mengambil data Best Seller dan Sold Out.');
+                        }
+            
+                        const data = await response.json();
+                        console.log("Data Best Seller dan Sold Out:", data);
+            
+                        // Muat data Best Seller
+                        bestSellerBody.innerHTML = '';
+                        data.best_seller.forEach((item, index) => {
+                            const row = `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${item.sku}</td>
+                                    <td>${item.nama_item}</td>
+                                    <td>${item.stok_terjual}</td>
+                                </tr>
+                            `;
+                            bestSellerBody.insertAdjacentHTML('beforeend', row);
+                        });
+            
+                        // Muat data Sold Out
+                        soldOutBody.innerHTML = '';
+                        data.sold_out.forEach((item, index) => {
+                            const row = `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${item.sku}</td>
+                                    <td>${item.nama_item}</td>
+                                </tr>
+                            `;
+                            soldOutBody.insertAdjacentHTML('beforeend', row);
+                        });
+                    } catch (error) {
+                        console.error('Error fetching Best Seller and Sold Out data:', error);
+                    }
+                }
+            
+                // Panggil fungsi fetchBestSellerAndSoldOutData saat halaman dimuat
+                fetchBestSellerAndSoldOutData();
+            });
+
+            async function fetchOrderSummary() {
+                try {
+                    const response = await fetch('/api/order-summary/');
+                    if (!response.ok) {
+                        throw new Error('Gagal mengambil data pesanan.');
+                    }
+        
+                    const data = await response.json();
+                    console.log("Ringkasan Pesanan:", data);
+        
+                    document.getElementById('on-order-count').textContent = data.on_order || 0;
+                    document.getElementById('pesanan-baru-count').textContent = data.pesanan_baru || 0;
+                    document.getElementById('pesanan-diproses-count').textContent = data.pesanan_diproses || 0;
+                    document.getElementById('pesanan-selesai-count').textContent = data.pesanan_selesai || 0;
+                } catch (error) {
+                    console.error('Error fetching order summary:', error);
+                }
+            }
+        
+            document.addEventListener('DOMContentLoaded', fetchOrderSummary);
+        
+        </script>        
+    </body>
+</html>

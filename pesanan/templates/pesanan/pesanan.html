@@ -1,0 +1,163 @@
+{% load static %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesanan</title>
+    <link rel="stylesheet" href="{% static 'css/pesanan.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+</head>
+
+<body>
+    <!-- Sidebar -->
+     {% include 'sidebar.html' %}
+     
+     <!-- Main Content -->
+      <main class="content">
+        
+        <!-- Header -->
+         <header class="menu-header">
+            <h1>KOPI SHINTA</h1>
+            <a href="{% url 'logout' %}" class="logout-button">Keluar</a>
+        </header>
+        
+        <div class="menu-submenu">
+            <h2>Daftar Pesanan</h2>
+        </div>
+        
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="search-bar">
+                <input type="text" id="search-order" placeholder="Cari Nomor Order/Nama Pelanggan" value="{{ search_query|default:'' }}" oninput="performSearch()">
+                <button type="button" id="scan-qr-button" class="scan-button">Scan QR</button>
+            </div>
+            <button class="add-order-button" onclick="window.location.href='{% url 'tambah_order' %}'">Tambah Order</button>
+        </div>
+                
+        <!-- Modal untuk QR Code Scanner -->
+        <div id="qr-modal" style="display:none;">
+            <div id="qr-scanner"></div>
+            <button type="button" onclick="stopScanner()">Tutup</button>
+        </div>
+
+                
+        <!-- Tabel Pesanan -->
+         <div class="scrollable-container">
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th class="col-tanggal">Tanggal</th>
+                        <th class="col-nomor-order">Nomor Order</th>
+                        <th class="col-pelanggan">Nama Pelanggan</th>
+                        <th class="col-layanan">Layanan</th>
+                        <th class="col-pesanan">Pesanan</th>
+                        <th class="col-harga">Total Harga</th>
+                        <th class="col-metode-bayar">Metode Bayar</th>
+                        <th class="col-status-bayar">Status Bayar</th>
+                        <th class="col-status-pesanan">Status Pesanan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{ order.tanggal }}</td>
+                        <td>{{ order.nomor_order }}</td>
+                        <td>{{ order.nama_pelanggan }}</td>
+                        <td>{{ order.layanan }}</td>
+                        <td>
+                            {% if order.orderData %}
+                                {{ order.orderData }}
+                            {% else %}
+                                Data tidak valid
+                            {% endif %}
+                        </td>
+                        <td>Rp {{ order.total_harga|floatformat:2 }}</td> <!-- Total harga -->
+                        <td>{{ order.metode_bayar }}</td> <!-- Metode bayar -->
+                        <td>
+                            {% if order.status == "Belum Bayar" %}
+                                <a href="{% url 'checkout_summary' %}?nomor_order={{ order.nomor_order }}">Belum Bayar</a>
+                            {% else %}
+                                {{ order.status }}
+                            {% endif %}
+                        </td>
+                        <td>{{ order.status_pesanan }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <script>
+        const searchInput = document.getElementById('search-order');
+        const tableBody = document.querySelector('.order-table tbody'); // Target tabel hasil
+    
+        // Fungsi pencarian otomatis
+        async function performSearch() {
+            const query = searchInput.value.trim(); // Ambil nilai input
+    
+            // Kirim permintaan AJAX ke server
+            const response = await fetch(`?q=${encodeURIComponent(query)}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest' // Tandai permintaan sebagai AJAX
+                }
+            });
+    
+            if (response.ok) {
+                const data = await response.json(); // Parsing JSON dari server
+                updateTable(data.orders); // Update tabel dengan hasil pencarian
+            } else {
+                console.error('Error fetching data:', response.statusText);
+            }
+        }
+    
+        // Fungsi untuk memperbarui tabel
+        function updateTable(orders) {
+            tableBody.innerHTML = ''; // Kosongkan tabel sebelumnya
+    
+            if (orders.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="9">Tidak ada data ditemukan.</td></tr>`;
+                return;
+            }
+    
+            // Loop melalui data dan buat baris tabel
+            orders.forEach(order => {
+                const row = `
+                    <tr>
+                        <td>${order.tanggal}</td>
+                        <td>${order.nomor_order}</td>
+                        <td>${order.nama_pelanggan}</td>
+                        <td>${order.layanan}</td>
+                        <td>${order.orderData || 'Data tidak valid'}</td>
+                        <td>Rp ${parseFloat(order.total_harga).toLocaleString('id-ID', { minimumFractionDigits: 2 })}</td>
+                        <td>${order.metode_bayar || '-'}</td>
+                        <td>${order.status === 'Belum Bayar' 
+                            ? `<a href="/checkout-summary/?nomor_order=${order.nomor_order}" class="btn btn-warning">Bayar Sekarang</a>` 
+                            : order.status}
+                        </td>
+                        <td>${order.status === 'Belum Bayar' ? '-' : order.status_pesanan}</td>  <!-- Jika belum bayar, status_pesanan jadi "-" -->
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        //Fungsi Scanner
+        scanQrButton.addEventListener('click', () => {
+            const scanner = new Html5Qrcode("qr-scanner");
+            scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
+                qrCodeMessage => {
+                    searchInput.value = qrCodeMessage; // Isi input dengan QR Code
+                    scanner.stop(); // Hentikan scanner
+                },
+                errorMessage => {
+                    console.warn(errorMessage);
+                }
+            ).catch(err => console.error(err));
+        });        
+    </script>
+</body>

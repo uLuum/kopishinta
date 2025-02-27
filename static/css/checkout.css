@@ -1,0 +1,475 @@
+/* Global Styles */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column; /* Atur layout kolom untuk tampilan mobile */
+    background-color: #f4f4f4; /* Warna latar belakang default */
+}
+
+.container {
+    display: flex;
+    flex-grow: 1;
+    flex-wrap: wrap; /* Membungkus konten jika layar lebih kecil */
+}
+
+/* Sidebar */
+/* Logo di sidebar */
+.sidebar img {
+    max-width: 80%; /* Pastikan logo tidak lebih besar dari sidebar */
+    height: auto; /* Pertahankan rasio gambar */
+    margin-bottom: 20px; /* Spasi di bawah logo */
+    display: block; /* Memastikan elemen gambar adalah block */
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0; /* Tetap di sisi kiri layar */
+    z-index: 1000; /* Pastikan sidebar berada di atas elemen lain */
+    overflow-y: auto; /* Scroll jika isi melebihi tinggi viewport */
+    width: 250px;
+    height: 100vh; /* Mengisi tinggi layar penuh */
+    background-color: #b8b8b8;
+    font-family: 'Arial', sans-serif;
+    font-size: 18px;
+    color: #ffffff;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    line-height: 1.5;
+    transition: transform 0.3s ease; /* Animasi saat sidebar muncul/tersembunyi */
+}
+
+.sidebar.hidden {
+    transform: translateX(-250px); /* Sembunyikan sidebar di luar layar */
+}
+
+/* Link navigasi */
+.sidebar nav a {
+    text-decoration: none; /* Hilangkan garis bawah */
+    color: white; /* Warna teks */
+    margin: 15px 0; /* Spasi antar link */
+    display: block; /* Pastikan setiap link mengambil baris baru */
+    padding: 15px; /* Padding untuk estetika */
+    border-radius: 5px; /* Sudut sedikit melengkung */
+    text-align: left; /* Pusatkan teks jika ada beberapa baris */
+    transition: background-color 0.3s ease; /* Animasi hover */
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Link aktif atau saat hover */
+.sidebar nav a.active,
+.sidebar nav a:hover {
+    background-color: #a38191; /* Warna latar belakang saat aktif atau hover */
+    font-weight: bold; /* Teks lebih tebal */
+    color: #ffffff; /* Warna teks */
+}
+
+/* Navigasi di sidebar */
+.sidebar nav {
+    display: flex;
+    flex-direction: column; /* Elemen link disusun secara vertikal */
+    width: 100%; /* Link mengisi lebar penuh */
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: #868686; /* Warna latar belakang saat aktif atau hover */
+    padding: 20px;
+}
+
+header h1 {
+    font-size: 32px;
+    margin: 0;
+    text-align: center;
+}
+
+header .logout-button {
+    background-color: #d9534f;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+/* Submenu Styling */
+.menu {
+    list-style: none;
+    padding: 0;
+}
+
+.menu-item {
+    margin-bottom: 10px;
+}
+
+.menu-btn {
+    background: none;
+    color: #ffffff;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.menu-btn:hover {
+    background-color: #8b6f82; /* Warna hover */
+}
+
+.menu-btn.active {
+    background-color: #a38191; /* Warna untuk submenu aktif */
+    color: #ffffff;
+}
+
+.submenu {
+    list-style: none;
+    padding-left: 20px; /* Indentasi submenu */
+    margin: 10px 0;
+}
+
+.submenu a {
+    display: block;
+    color: #ffffff;
+    font-size: 16px;
+    text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.submenu a:hover {
+    background-color: #8b6f82; /* Warna hover submenu */
+    color: #ffffff;
+}
+
+.submenu a.active {
+    background-color: #a38191; /* Warna submenu aktif */
+    font-weight: bold;
+}
+
+/* Tombol menu untuk ponsel */
+.menu-toggle {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1100;
+    background-color: #868686;
+    color: white;
+    border: none;
+    font-size: 20px;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: none; /* Tidak tampil di layar besar */
+}
+
+/* Main Content */
+.content {
+    flex-grow: 1;
+    margin-left: 250px; /* Memberikan ruang untuk sidebar */
+    padding: 20px;
+    background-color: #f4f4f4;
+    overflow-x: auto; /* Menghindari konten meluap secara horizontal */
+    transition: margin-left 0.3s ease; /* Animasi jika sidebar disembunyikan */
+}
+
+/* Grid Divider */
+.flex-container {
+    display: flex;
+    gap: 20px;
+    height: 100%; /* Pastikan ketinggian penuh */
+}
+
+/* Receipt Section */
+.receipt-section {
+    flex: 1; /* Mengambil 50% ruang */
+    max-width: 40%; /* Membatasi lebar maksimum 50% */
+    border: 1px solid #ddd;
+    padding: 10px;
+    background-color: #f8f9fa;
+    overflow-y: auto;
+    height: 600px; /* Sesuaikan dengan tinggi layar */
+    border-radius: 5px;
+}
+
+/* Header dalam Receipt Section */
+.receipt-header {
+    display: flex;
+    justify-content: space-between; /* Posisi kiri dan kanan */
+    margin-bottom: 20px;
+    border-bottom: 2px solid black; /* Tambahkan garis bawah */
+    padding-bottom: 10px;
+}
+
+.receipt img {
+    max-width: 30%; 
+    height: 30%; /* Pertahankan rasio gambar */
+    margin-bottom: 20px; /* Spasi di bawah logo */
+    display: block; /* Memastikan elemen gambar adalah block */
+    justify-content: center; /* Posisi kiri dan kanan */
+}
+
+/* Kolom Kiri dan Kanan */
+.receipt-left, .receipt-right {
+    width: 50%; /* Lebar masing-masing bagian */
+}
+
+/* Teks Receipt */
+.receipt-left p, .receipt-right p {
+    margin: 5px 0;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex; /* Untuk menjaga alignment */
+}
+
+/* Styling untuk span di header */
+.receipt-left span,
+.receipt-right span {
+    width: 120px; /* Pastikan kolom judul memiliki lebar tetap */
+    font-weight: bold;
+}
+
+/* Styling untuk baris row */
+.row {
+    display: grid;
+    grid-template-columns: auto 20px auto; /* Kolom untuk label, colon, dan value */
+    align-items: center; /* Sejajarkan elemen secara vertikal */
+    gap: 5px; /* Spasi antar elemen */
+    margin: 5px 0; /* Jarak antar baris */
+    font-size: 14px; /* Ukuran font */
+    font-weight: 500; /* Tebal teks */
+}
+
+.label {
+    text-align: left; /* Label rata kiri */
+    white-space: nowrap; /* Pastikan teks label tidak terpotong */
+}
+
+.value {
+    text-align: right; /* Value rata kanan */
+    white-space: nowrap; /* Pastikan teks value tidak terpotong */
+}
+
+
+/* Tabel */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+table th {
+    text-align: center;
+    background-color: #949494;
+}
+
+/* Payment Section */
+.payment-section {
+    flex: 1; /* Mengambil 50% ruang */
+    max-width: 60%; /* Membatasi lebar maksimum 50% */
+    border: 1px solid #ddd;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    overflow-y: auto;
+    height: 600px; /* Sesuaikan dengan tinggi layar*/
+    display: flex;
+    flex-direction: column; /* Susun elemen secara vertikal */
+}
+
+/* Order Summary */
+.order-summary {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+#payment-input {
+    margin-top: 15px;
+}
+input[type="number"] {
+    width: 60%;
+    padding: 15px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+label {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+/* Tombol Metode Pembayaran */
+.payment-section button {
+    padding: 15px; /* Tinggi tombol yang konsisten */
+    margin: 10px auto; /* Margin atas dan bawah otomatis untuk sentralisasi */
+    background-color: #05744f; /* Warna latar */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: center; /* Teks di tengah */
+    width: 80%; /* Ukuran tombol seragam */
+    box-sizing: border-box; /* Untuk menjaga padding tetap di dalam tombol */
+}
+
+.payment-section button:hover {
+    background-color: #5e5920;
+}
+
+/* Tombol Lunas */
+#lunas-button {
+    padding: 15px; /* Sama seperti tombol lainnya */
+    margin-top: 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    display: block; /* Memastikan tombol tampil seperti blok */
+    width: 80%; /* Ukuran tombol sama dengan tombol pembayaran */
+    max-width: 300px; /* Batas lebar tombol di layar besar */
+    text-align: center;
+    margin-left: auto; /* Sentralisasi horizontal */
+    margin-right: auto; /* Sentralisasi horizontal */
+}
+
+#lunas-button:hover {
+    background-color: #0056b3;
+}
+
+/* Buttons Styling */
+button:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.back-button {
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .flex-container {
+        flex-direction: column; /* Tampilkan dalam layout kolom */
+    }
+    .receipt-section, .payment-section {
+        max-width: 100%; /* Ambil seluruh lebar */
+        height: auto; /* Sesuaikan tinggi */
+        padding: 15px; /* Sesuaikan padding */
+    }
+    .receipt-header {
+        flex-direction: column; /* Susun secara vertikal */
+    }
+
+    .receipt-left, .receipt-right {
+        width: 100%; /* Ambil lebar penuh */
+    }
+}
+
+@media print {
+    body {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 12px;
+        margin: 0;
+        padding: 0;
+        width: 58mm; /* Sesuaikan dengan lebar printer thermal */
+    }
+
+    .header, .footer {
+        text-align: center;
+    }
+
+    .header img {
+        width: 60px;
+        height: auto;
+        margin-bottom: 5px;
+    }
+
+    .line {
+        border-top: 1px dashed #000;
+        margin: 10px 0;
+    }
+
+    /* Atur tabel untuk receipt */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 5px;
+    }
+
+    table th, table td {
+        border: none; /* Hilangkan border tabel */
+        font-size: 10px;
+        padding: 5px 2px; /* Tambahkan sedikit ruang di dalam sel */
+        text-align: left;
+    }
+
+    /* Lebar khusus untuk kolom tertentu */
+    table th:nth-child(2), /* Kolom "Jumlah" */
+    table td:nth-child(2) {
+        width: 15%; /* Lebar kolom "Jumlah" */
+        text-align: center; /* Teks rata tengah */
+    }
+
+    table th:nth-child(3), /* Kolom "Harga" */
+    table td:nth-child(3) {
+        width: 25%; /* Lebar kolom "Harga" */
+        text-align: right; /* Harga rata kanan */
+    }
+
+    table th {
+        text-align: left;
+        font-weight: bold;
+    }
+
+    .item td {
+        text-align: right;
+    }
+
+    .total {
+        font-weight: bold;
+        text-align: right;
+    }
+
+    .footer {
+        margin-top: 10px;
+        font-size: 12px;
+    }
+
+    /* Hilangkan elemen yang tidak perlu saat mencetak */
+    .sidebar, .logout-button, .back-button, .payment-section {
+        display: none !important;
+    }
+}

@@ -1,0 +1,81 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan</title>
+    <link rel="stylesheet" href="{% static 'css/laporan_keuangan.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+</head>
+
+<body>
+        <!-- Sidebar -->
+        {% include 'sidebar.html' %}
+
+        <!-- Main Content -->
+        <div class="content">
+            <header class="order-header">
+                <h1>KOPI SHINTA</h1>
+                <a href="{% url 'logout' %}" class="logout-button">Keluar</a>
+            </header>
+
+            <div class="main-content">
+                <h1>Laporan Keuangan</h1>
+
+            <!-- Filter dan Total Pendapatan -->
+            <div class="filter-section">
+                <!-- Total Pendapatan -->
+                <div class="total-pendapatan">
+                    <strong>Total Semua Pendapatan: </strong>
+                    <span id="total-pendapatan">0</span>
+                </div>
+
+            <!-- Tabel Pendapatan (Billing) -->
+                <table class="billing-table">
+                    <thead>
+                        <tr>
+                            <th>Periode</th>
+                            <th>Hari Ini</th>
+                            <th>Kemarin</th>
+                            <th>7 Hari Terakhir</th>
+                            <th>30 Hari Terakhir</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Total</td>
+                            <td id="today-total">Rp 0</td>
+                            <td id="yesterday-total">Rp 0</td>
+                            <td id="week-total">Rp 0</td>
+                            <td id="month-total">Rp 0</td>
+                        </tr>
+                    </tbody>
+                </table>
+                                                
+                <!-- Tombol Download -->
+                <button id="download-btn" class="export-button">Download Data</button>
+            </div>        
+                            
+            <div class="scrollable-container">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Nomor Order</th>
+                            <th>Layanan</th>
+                            <th>Total Harga</th>
+                            <th>Metode Pembayaran</th>
+                            <th>Status Bayar</th>
+                        </tr>
+                    </thead>
+                        <tbody id="laporan-body">
+                            <!-- Data akan dimuat secara dinamis -->
+                        </tbody>
+                    </table>
+            </div>
+        </div>
+    <script src="{% static 'js/laporan_keuangan.js' %}"></script>
+</body>
+</html>
