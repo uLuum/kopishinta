@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-hcqne%*7u!e10zylu^nt3a(hc&)-08w4l60*h386=q2feo^2tu
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', '10.0.2.2', 'localhost']
+ALLOWED_HOSTS = ['103.27.206.116', '127.0.0.1', '10.0.2.2', 'localhost']
 
 AUTH_USER_MODEL = 'dashboard.CustomUser' # Use your model if created
 
@@ -62,15 +62,19 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
+    'http://103.27.206.116:8000',
     'http://127.0.0.1:8000',  # Backend Django
     'http://localhost:8000',  # Jika menggunakan localhost
     'http://10.0.2.2:8000',  # Emulator Android
-
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
-CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000']
-
+CSRF_TRUSTED_ORIGINS = [
+    'http://103.27.206.116',
+    'http://127.0.0.1',
+    'http://localhost',
+    'http://10.0.2.2',
+]
 
 ROOT_URLCONF = 'selforder.urls'
 
