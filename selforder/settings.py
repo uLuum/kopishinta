@@ -106,7 +106,7 @@ DATABASES = {
         'NAME': 'kopishinta',
         'USER' : 'nurulum',
         'PASSWORD' : 'adminnurulum24',
-        'HOST' : '127.0.0.1',
+        'HOST' : '103.27.206.116',
         'PORT' : '3306',
     }
 }
