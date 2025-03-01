@@ -76,6 +76,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://127.0.0.1',
     'http://localhost',
     'https://localhost',
+    'http://10.0.2.2',
+    'https://10.0.2.2',
 ]
 
 ROOT_URLCONF = 'selforder.urls'
