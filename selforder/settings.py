@@ -71,9 +71,11 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_ALL_ORIGINS = True
 CSRF_TRUSTED_ORIGINS = [
     'http://103.27.206.116',
+    'https://103.27.206.116',
     'http://127.0.0.1',
+    'https://127.0.0.1',
     'http://localhost',
-    'http://10.0.2.2',
+    'https://localhost',
 ]
 
 ROOT_URLCONF = 'selforder.urls'
